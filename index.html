@@ -24,7 +24,6 @@
         <section id="hero" class="hero">
             <div class="hero-content container">
                 <h1>Corte de Respeito, <br>Experiência Única.</h1>
-                <p>Onde a tradição encontra a modernidade.</p>
                 <a href="#view-cliente" class="btn-primary" id="hero-cta">Agendar Agora</a>
             </div>
         </section>
@@ -43,10 +42,10 @@
                             <input type="datetime-local" id="data" required>
                         </div>
                         <div class="input-group">
-                            <label for="servico">Serviço Desejado</label>
+                            <label for="servico">Serviço</label>
                             <select id="servico">
                                 <option value="Corte Clássico">Corte Clássico - R$ 40</option>
-                                <option value="Barba">Barba de Lenhador - R$ 30</option>
+                                <option value="Barba">Barba - R$ 30</option>
                                 <option value="Combo Premium">Combo Premium - R$ 60</option>
                             </select>
                         </div>
@@ -58,27 +57,24 @@
             <section id="view-dashboard" class="view hidden">
                 <div class="card-glass">
                     <div class="header-dash">
-                        <h2><i class="fas fa-list-ul"></i> Agenda de Clientes</h2>
+                        <h2><i class="fas fa-list-ul"></i> Agenda</h2>
                         <span id="count-agendamentos" class="badge">0</span>
                     </div>
 
                     <div class="dashboard-controls">
                         <div class="quick-filters">
                             <button class="btn-filter" data-period="hoje">Hoje</button>
-                            <button class="btn-filter" data-period="semana">Esta Semana</button>
+                            <button class="btn-filter active" data-period="semana">Esta Semana</button>
                             <button class="btn-filter" data-period="mes">Este Mês</button>
                         </div>
                         
-                        <div class="custom-date-filters">
-                            <input type="date" id="filtro-inicio">
-                            <span>até</span>
-                            <input type="date" id="filtro-fim">
-                            <button id="btn-limpar-filtro" class="btn-icon" title="Limpar"><i class="fas fa-times"></i></button>
+                        <div class="day-selector">
+                            <label for="filtro-dia">Ou escolha um dia:</label>
+                            <input type="date" id="filtro-dia">
                         </div>
                     </div>
 
-                    <div id="lista-agendamentos" class="agenda-container">
-                        </div>
+                    <div id="lista-agendamentos" class="agenda-container"></div>
                 </div>
             </section>
         </div>

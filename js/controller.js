@@ -6,51 +6,38 @@ export class BarberController {
     }
 
     init() {
-        // Envio do Form
         this.view.form.onsubmit = (e) => this.handleNovoAgendamento(e);
-
-        // Navegação
         document.getElementById('btn-cliente').onclick = () => this.view.mostrarSecao('view-cliente');
         document.getElementById('btn-dashboard').onclick = () => {
             this.view.mostrarSecao('view-dashboard');
-            this.setPeriodoPreDefinido('semana'); // Padrão ao abrir
+            this.setPeriodo('semana');
         };
 
-        // Filtros Rápidos
+        // Filtros de Botão
         document.querySelectorAll('.btn-filter').forEach(btn => {
             btn.onclick = () => {
+                this.view.filtroDia.value = ''; // Limpa o calendário ao usar botões
                 document.querySelectorAll('.btn-filter').forEach(b => b.classList.remove('active'));
                 btn.classList.add('active');
-                this.setPeriodoPreDefinido(btn.dataset.period);
+                this.setPeriodo(btn.dataset.period);
             };
         });
 
-        // Filtros Manuais
-        this.view.filtroInicio.onchange = () => this.atualizarDashboard();
-        this.view.filtroFim.onchange = () => this.atualizarDashboard();
-        this.view.btnLimpar.onclick = () => {
-            this.view.setDatasFiltro('', '');
-            this.atualizarDashboard();
-        };
-
-        // Hero CTA
-        document.getElementById('hero-cta').onclick = (e) => {
-            e.preventDefault();
-            this.view.mostrarSecao('view-cliente');
-            window.scrollTo({ top: 500, behavior: 'smooth' });
+        // Filtro de Calendário (Dia Específico)
+        this.view.filtroDia.onchange = (e) => {
+            document.querySelectorAll('.btn-filter').forEach(b => b.classList.remove('active'));
+            this.atualizarDashboard(e.target.value, e.target.value);
         };
     }
 
-    setPeriodoPreDefinido(periodo) {
+    setPeriodo(periodo) {
         const hoje = new Date();
         let inicio, fim;
 
         if (periodo === 'hoje') {
             const str = hoje.toISOString().split('T')[0];
-            inicio = str;
-            fim = str;
+            inicio = fim = str;
         } else if (periodo === 'semana') {
-            // Calcula o primeiro dia (domingo) e o último (sábado)
             const d = new Date(hoje);
             const day = d.getDay();
             const diff = d.getDate() - day;
@@ -60,9 +47,7 @@ export class BarberController {
             inicio = new Date(hoje.getFullYear(), hoje.getMonth(), 1).toISOString().split('T')[0];
             fim = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0).toISOString().split('T')[0];
         }
-
-        this.view.setDatasFiltro(inicio, fim);
-        this.atualizarDashboard();
+        this.atualizarDashboard(inicio, fim);
     }
 
     handleNovoAgendamento(e) {
@@ -70,23 +55,18 @@ export class BarberController {
         const { nome, data, servico } = e.target.elements;
         this.model.adicionarAgendamento(nome.value, data.value, servico.value);
         e.target.reset();
-        alert('Agendamento realizado com sucesso!');
+        alert('Agendado!');
         this.view.mostrarSecao('view-dashboard');
-        this.setPeriodoPreDefinido('semana');
+        this.setPeriodo('semana');
     }
 
-    atualizarDashboard() {
-        const dados = this.model.getAgendamentosPorPeriodo(
-            this.view.filtroInicio.value, 
-            this.view.filtroFim.value
-        );
-        this.view.renderizarAgenda(dados, (id) => this.confirmarConclusao(id));
-    }
-
-    confirmarConclusao(id) {
-        if (confirm('Marcar este atendimento como concluído?')) {
-            this.model.removerAgendamento(id);
-            this.atualizarDashboard();
-        }
+    atualizarDashboard(inicio, fim) {
+        const dados = this.model.getAgendamentosPorPeriodo(inicio, fim);
+        this.view.renderizarAgenda(dados, (id) => {
+            if(confirm('Concluir?')) {
+                this.model.removerAgendamento(id);
+                this.atualizarDashboard(inicio, fim);
+            }
+        });
     }
 }
