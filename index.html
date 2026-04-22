@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BarberFlow | Estilo e Tradição</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+    <header>
+        <nav class="container">
+            <div class="logo">Barber<span>Flow</span></div>
+            <div class="nav-buttons">
+                <button id="btn-cliente" class="btn-nav active">Agendar</button>
+                <button id="btn-dashboard" class="btn-nav">Painel Barbeiro</button>
+            </div>
+        </nav>
+    </header>
+
+    <main id="app">
+        <section id="hero" class="hero">
+            <div class="hero-content container">
+                <h1>Corte de Respeito, <br>Experiência Única.</h1>
+                <p>Onde a tradição encontra a modernidade.</p>
+                <a href="#view-cliente" class="btn-primary" id="hero-cta">Agendar Agora</a>
+            </div>
+        </section>
+
+        <div class="container content-wrapper">
+            <section id="view-cliente" class="view">
+                <div class="card-glass">
+                    <h2><i class="fas fa-calendar-check"></i> Reservar Horário</h2>
+                    <form id="form-agendamento">
+                        <div class="input-group">
+                            <label for="nome">Nome Completo</label>
+                            <input type="text" id="nome" placeholder="Ex: João Silva" required>
+                        </div>
+                        <div class="input-group">
+                            <label for="data">Data e Hora</label>
+                            <input type="datetime-local" id="data" required>
+                        </div>
+                        <div class="input-group">
+                            <label for="servico">Serviço Desejado</label>
+                            <select id="servico">
+                                <option value="Corte Clássico">Corte Clássico - R$ 40</option>
+                                <option value="Barba">Barba de Lenhador - R$ 30</option>
+                                <option value="Combo Premium">Combo Premium - R$ 60</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn-submit">Confirmar Agendamento</button>
+                    </form>
+                </div>
+            </section>
+
+            <section id="view-dashboard" class="view hidden">
+                <div class="card-glass">
+                    <div class="header-dash">
+                        <h2><i class="fas fa-list-ul"></i> Agenda de Clientes</h2>
+                        <span id="count-agendamentos" class="badge">0</span>
+                    </div>
+
+                    <div class="dashboard-controls">
+                        <div class="quick-filters">
+                            <button class="btn-filter" data-period="hoje">Hoje</button>
+                            <button class="btn-filter" data-period="semana">Esta Semana</button>
+                            <button class="btn-filter" data-period="mes">Este Mês</button>
+                        </div>
+                        
+                        <div class="custom-date-filters">
+                            <input type="date" id="filtro-inicio">
+                            <span>até</span>
+                            <input type="date" id="filtro-fim">
+                            <button id="btn-limpar-filtro" class="btn-icon" title="Limpar"><i class="fas fa-times"></i></button>
+                        </div>
+                    </div>
+
+                    <div id="lista-agendamentos" class="agenda-container">
+                        </div>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <script type="module" src="js/app.js"></script>
+</body>
+</html>
