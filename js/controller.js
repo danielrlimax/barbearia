@@ -1,72 +1,99 @@
 export class BarberController {
+    #model;
+    #view;
+    #periodoAtual = 'semana';
+
     constructor(model, view) {
-        this.model = model;
-        this.view = view;
-        this.init();
+        this.#model = model;
+        this.#view = view;
+        this.#inicializar();
     }
 
-    init() {
-        this.view.form.onsubmit = (e) => this.handleNovoAgendamento(e);
-        document.getElementById('btn-cliente').onclick = () => this.view.mostrarSecao('view-cliente');
-        document.getElementById('btn-dashboard').onclick = () => {
-            this.view.mostrarSecao('view-dashboard');
-            this.setPeriodo('semana');
-        };
-
-        // Filtros de Botão
-        document.querySelectorAll('.btn-filter').forEach(btn => {
-            btn.onclick = () => {
-                this.view.filtroDia.value = ''; // Limpa o calendário ao usar botões
-                document.querySelectorAll('.btn-filter').forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
-                this.setPeriodo(btn.dataset.period);
-            };
+    #inicializar() {
+        this.#view.mostrarSecao('view-cliente');
+        this.#view.bindEventos({
+            onAgendar: (e) => this.#handleAgendamento(e),
+            onMostrarCliente: () => this.#view.mostrarSecao('view-cliente'),
+            onMostrarDashboard: () => {
+                this.#view.mostrarSecao('view-dashboard');
+                this.#aplicarPeriodo(this.#periodoAtual);
+            },
+            onFiltroPeriodo: (periodo) => this.#aplicarPeriodo(periodo),
+            onFiltroDia: (e) => this.#filtrarPorDiaEspecifico(e.target.value)
         });
 
-        // Filtro de Calendário (Dia Específico)
-        this.view.filtroDia.onchange = (e) => {
-            document.querySelectorAll('.btn-filter').forEach(b => b.classList.remove('active'));
-            this.atualizarDashboard(e.target.value, e.target.value);
-        };
+        // Define data/hora mínima como agora
+        const now = new Date();
+        now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+        document.getElementById('data').min = now.toISOString().slice(0, 16);
     }
 
-    setPeriodo(periodo) {
+    #handleAgendamento(e) {
+        e.preventDefault();
+        const { nome, data, servico } = e.target.elements;
+
+        if (!nome.value.trim() || !data.value) {
+            this.#view.exibirFeedback('Preencha todos os campos.', 'error');
+            return;
+        }
+
+        const dataSelecionada = new Date(data.value);
+        if (dataSelecionada < new Date()) {
+            this.#view.exibirFeedback('A data/hora deve ser futura.', 'error');
+            return;
+        }
+
+        this.#model.adicionarAgendamento(nome.value, data.value, servico.value);
+        this.#view.limparFormulario();
+        this.#view.exibirFeedback('✅ Agendamento confirmado!');
+
+        this.#view.mostrarSecao('view-dashboard');
+        this.#aplicarPeriodo(this.#periodoAtual);
+    }
+
+    #aplicarPeriodo(periodo) {
+        this.#periodoAtual = periodo;
+        this.#view.destacarFiltroAtivo(periodo);
+
+        const { inicio, fim } = this.#calcularIntervalo(periodo);
+        this.#atualizarDashboard(inicio, fim);
+    }
+
+    #filtrarPorDiaEspecifico(dataISO) {
+        if (!dataISO) return;
+        this.#view.destacarFiltroAtivo(null);
+        this.#atualizarDashboard(dataISO, dataISO);
+    }
+
+    #calcularIntervalo(periodo) {
         const hoje = new Date();
         let inicio, fim;
 
         if (periodo === 'hoje') {
-            const str = hoje.toISOString().split('T')[0];
-            inicio = fim = str;
+            inicio = fim = hoje.toISOString().split('T')[0];
         } else if (periodo === 'semana') {
-            const d = new Date(hoje);
-            const day = d.getDay();
-            const diff = d.getDate() - day;
-            inicio = new Date(d.setDate(diff)).toISOString().split('T')[0];
-            fim = new Date(d.setDate(diff + 6)).toISOString().split('T')[0];
-        } else if (periodo === 'mes') {
+            const domingo = new Date(hoje);
+            domingo.setDate(hoje.getDate() - hoje.getDay());
+            const sabado = new Date(domingo);
+            sabado.setDate(domingo.getDate() + 6);
+            inicio = domingo.toISOString().split('T')[0];
+            fim = sabado.toISOString().split('T')[0];
+        } else {
             inicio = new Date(hoje.getFullYear(), hoje.getMonth(), 1).toISOString().split('T')[0];
             fim = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0).toISOString().split('T')[0];
         }
-        this.atualizarDashboard(inicio, fim);
+        return { inicio, fim };
     }
 
-    handleNovoAgendamento(e) {
-        e.preventDefault();
-        const { nome, data, servico } = e.target.elements;
-        this.model.adicionarAgendamento(nome.value, data.value, servico.value);
-        e.target.reset();
-        alert('Agendado!');
-        this.view.mostrarSecao('view-dashboard');
-        this.setPeriodo('semana');
+    #atualizarDashboard(inicio, fim) {
+        const dados = this.#model.getAgendamentosPorPeriodo(inicio, fim);
+        this.#view.renderizarAgenda(dados, (id) => this.#removerAgendamento(id, inicio, fim));
     }
 
-    atualizarDashboard(inicio, fim) {
-        const dados = this.model.getAgendamentosPorPeriodo(inicio, fim);
-        this.view.renderizarAgenda(dados, (id) => {
-            if(confirm('Concluir?')) {
-                this.model.removerAgendamento(id);
-                this.atualizarDashboard(inicio, fim);
-            }
-        });
+    #removerAgendamento(id, inicio, fim) {
+        if (confirm('Marcar como concluído e remover?')) {
+            this.#model.removerAgendamento(id);
+            this.#atualizarDashboard(inicio, fim);
+        }
     }
 }

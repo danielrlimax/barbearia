@@ -1,42 +1,64 @@
 export class BarberModel {
+    #storageKey = 'barberflow_agendamentos_v4';
+
     constructor() {
-        this.storageKey = 'agendamentos_barberflow_v3';
+        this.#seedMockData();
     }
 
-    getAgendamentos() {
-        const dados = localStorage.getItem(this.storageKey);
-        const lista = dados ? JSON.parse(dados) : [];
-        // Ordenação cronológica obrigatória
+    #seedMockData() {
+        if (!localStorage.getItem(this.#storageKey)) {
+            const hoje = new Date();
+            const amanha = new Date(hoje);
+            amanha.setDate(hoje.getDate() + 1);
+
+            const mock = [
+                { id: 101, nome: "Carlos Mendes", data: `${hoje.toISOString().split('T')[0]}T14:00`, servico: "Corte Clássico" },
+                { id: 102, nome: "Ricardo Alves", data: `${hoje.toISOString().split('T')[0]}T15:30`, servico: "Combo Completo" },
+                { id: 103, nome: "Felipe Moura", data: `${amanha.toISOString().split('T')[0]}T09:00`, servico: "Barba Premium" },
+                { id: 104, nome: "André Lima", data: `${amanha.toISOString().split('T')[0]}T11:15`, servico: "Corte Clássico" }
+            ];
+            localStorage.setItem(this.#storageKey, JSON.stringify(mock));
+        }
+    }
+
+    getTodosAgendamentos() {
+        const data = localStorage.getItem(this.#storageKey);
+        const lista = data ? JSON.parse(data) : [];
         return lista.sort((a, b) => new Date(a.data) - new Date(b.data));
     }
 
-    getAgendamentosPorPeriodo(dataInicio, dataFim) {
-        let lista = this.getAgendamentos();
+    getAgendamentosPorPeriodo(inicioISO, fimISO) {
+        let lista = this.getTodosAgendamentos();
+        if (!inicioISO && !fimISO) return lista;
 
-        if (dataInicio) {
-            const inicio = new Date(dataInicio);
-            inicio.setHours(0, 0, 0, 0);
-            lista = lista.filter(a => new Date(a.data) >= inicio);
-        }
+        const inicio = inicioISO ? new Date(inicioISO) : null;
+        const fim = fimISO ? new Date(fimISO) : null;
+        if (inicio) inicio.setHours(0, 0, 0, 0);
+        if (fim) fim.setHours(23, 59, 59, 999);
 
-        if (dataFim) {
-            const fim = new Date(dataFim);
-            fim.setHours(23, 59, 59, 999);
-            lista = lista.filter(a => new Date(a.data) <= fim);
-        }
-
-        return lista;
+        return lista.filter(item => {
+            const data = new Date(item.data);
+            if (inicio && data < inicio) return false;
+            if (fim && data > fim) return false;
+            return true;
+        });
     }
 
-    adicionarAgendamento(nome, data, servico) {
-        const agendamentos = this.getAgendamentos();
-        const novo = { id: Date.now(), nome, data, servico };
+    adicionarAgendamento(nome, dataISO, servico) {
+        const agendamentos = this.getTodosAgendamentos();
+        const novo = {
+            id: Date.now() + Math.floor(Math.random() * 1000),
+            nome: nome.trim(),
+            data: dataISO,
+            servico
+        };
         agendamentos.push(novo);
-        localStorage.setItem(this.storageKey, JSON.stringify(agendamentos));
+        localStorage.setItem(this.#storageKey, JSON.stringify(agendamentos));
+        return novo;
     }
 
     removerAgendamento(id) {
-        const agendamentos = this.getAgendamentos().filter(a => a.id !== id);
-        localStorage.setItem(this.storageKey, JSON.stringify(agendamentos));
+        const filtrado = this.getTodosAgendamentos().filter(a => a.id !== id);
+        localStorage.setItem(this.#storageKey, JSON.stringify(filtrado));
     }
 }
